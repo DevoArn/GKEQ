@@ -111,6 +111,16 @@ static void renderIcon (const juce::File& out)
     std::printf ("wrote %s\n", out.getFullPathName().toRawUTF8());
 }
 
+static int failures = 0;
+static void expect (bool ok, const char* what)
+{
+    if (! ok)
+    {
+        ++failures;
+        std::printf ("  FAIL: %s\n", what);
+    }
+}
+
 int main()
 {
     juce::ScopedJuceInitialiser_GUI gui;
@@ -134,6 +144,7 @@ int main()
         double rms = 0.0;
         const auto fit = ui::fitCurve (target, i0, i1, 8, fs, rms);
         std::printf ("curve fit: %d bands, residual %.3f dB RMS\n", (int) fit.size(), rms);
+        expect (rms < 0.3, "curve fit residual");
         for (auto& f : fit)
             std::printf ("   %-10s %8.1f Hz  %+5.2f dB  Q %.2f\n", filterTypeNames()[(int) f.type].toRawUTF8(), f.freq, f.gain, f.q);
     }
@@ -156,6 +167,7 @@ int main()
             const bool kept = (int) u["anaRange"] == 60 && std::abs ((double) u["anaTilt"] - 3.0) < 1e-9
                            && (int) u["width"] == 1320 && (int) u["displayRange"] == 24;
             std::printf ("normal UI settings survive save/reload: %s\n", kept ? "yes" : "NO");
+            expect (kept, "UI settings round trip");
         }
 
         juce::MemoryBlock state;
@@ -175,6 +187,7 @@ int main()
         const auto& u = p.uiState;
         const bool clamped = (int) u["anaRange"] == 120 && (double) u["anaTilt"] >= 0.0 && (double) u["anaTilt"] <= 6.0
                           && (int) u["width"] == 880 && (int) u["displayRange"] == 30 && (int) u["anaRes"] == 3;
+        expect (clamped, "hostile UI state clamped");
         std::printf ("hostile UI state clamped: %s (range %d, tilt %.1f, width %d, displayRange %d, anaRes %d)\n",
                      clamped ? "yes" : "NO", (int) u["anaRange"], (double) u["anaTilt"], (int) u["width"],
                      (int) u["displayRange"], (int) u["anaRes"]);
@@ -291,12 +304,14 @@ int main()
         const double expectRange = d.yToDb (nodeY + 120.0f);
         std::printf ("range drag on a fresh dynamic band: range %.2f dB (expected %.2f), gain %.2f dB\n",
                      afterRange.dynRange, expectRange, afterRange.gain);
+        expect (std::abs (afterRange.dynRange - expectRange) < 0.05 && std::abs (afterRange.gain) < 1.0e-6, "range handle drag");
 
         const float thrY = d.specToY (-30.0f);   // tilt is 0 dB at 1 kHz
         dragFromTo ({ x + 12.0f, thrY }, { x + 12.0f, thrY - 50.0f });
         const auto afterThr = proc.refs.readBand (tb);
         std::printf ("threshold drag: threshold %.2f dB (expected %.2f), range %.2f dB\n",
                      afterThr.threshold, -30.0 + (d.specFromY (thrY - 50.0f) - d.specFromY (thrY)), afterThr.dynRange);
+        expect (std::abs (afterThr.threshold - (-30.0 + (d.specFromY (thrY - 50.0f) - d.specFromY (thrY)))) < 0.05, "threshold handle drag");
         feed (proc, 30, rng);
         d.selectBand (tb);
         feed (proc, 5, rng);
@@ -314,5 +329,6 @@ int main()
 
     ed.reset();
     proc.releaseResources();
-    return 0;
+    std::printf ("\n%s (%d failure%s)\n", failures == 0 ? "UI TEST PASSED" : "UI TEST FAILED", failures, failures == 1 ? "" : "s");
+    return failures == 0 ? 0 : 1;
 }

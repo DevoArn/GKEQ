@@ -63,10 +63,17 @@ call :build_plugin || exit /b 1
 python "%SRC%Tools\make_payload.py" "%SRC%build" "%SRC%build\installer\payload.zip" "%SRC%." || exit /b 1
 cmake -S "%SRC%." -B "%SRC%build-installer" -G Ninja -DCMAKE_BUILD_TYPE=Release -DMEQ_BUILD_PLUGIN=OFF -DMEQ_BUILD_INSTALLER=ON "-DMEQ_PAYLOAD=%SRC%build\installer\payload.zip" || exit /b 1
 cmake --build "%SRC%build-installer" --target ModernEQSetup ModernEQSetupTest || exit /b 1
+rem Version from CMakeLists.txt: "project(ModernEQ VERSION x.y.z ...)"
+set "VER="
+for /f "tokens=3" %%v in ('findstr /b /c:"project(ModernEQ VERSION" "%SRC%CMakeLists.txt"') do set "VER=%%v"
+if not defined VER (
+    echo Could not read the version from CMakeLists.txt
+    exit /b 1
+)
 if not exist "%SRC%dist" mkdir "%SRC%dist"
-copy /Y "%SRC%build-installer\ModernEQSetup_artefacts\Release\GKEQ Setup.exe" "%SRC%dist\GKEQ 1.0.0 Setup.exe" >nul || exit /b 1
+copy /Y "%SRC%build-installer\ModernEQSetup_artefacts\Release\GKEQ Setup.exe" "%SRC%dist\GKEQ %VER% Setup.exe" >nul || exit /b 1
 echo.
-echo Installer: %SRC%dist\GKEQ 1.0.0 Setup.exe
+echo Installer: %SRC%dist\GKEQ %VER% Setup.exe
 exit /b 0
 
 :debug

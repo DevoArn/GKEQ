@@ -1,0 +1,161 @@
+# GKEQ - CI / CD
+#
+#  CI: every push to main and every pull request is built on Windows and
+#      tested (DSP, VST3 host, installer, UI / state robustness). The plug-in,
+#      the installer and UI screenshots are kept as workflow artifacts.
+#  CD: pushing a tag "vX.Y.Z" (matching the version in CMakeLists.txt) also
+#      publishes a GitHub release with the installer and its SHA-256 checksum.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build-and-test:
+    name: Build & test (Windows x64)
+    runs-on: windows-2022
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out (with JUCE and PFFFT submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $line = Select-String -Path CMakeLists.txt -Pattern '^project\(ModernEQ VERSION (\S+)' | Select-Object -First 1
+          $ver = $line.Matches[0].Groups[1].Value
+          "version=$ver" >> $env:GITHUB_OUTPUT
+          Write-Host "GKEQ version $ver"
+
+      - name: Tag must match the version in CMakeLists.txt
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_name }}" -ne "v${{ steps.version.outputs.version }}") {
+            Write-Error "Tag ${{ github.ref_name }} does not match project version ${{ steps.version.outputs.version }}"
+            exit 1
+          }
+
+      - name: DSP tests
+        shell: cmd
+        run: call build.bat tests
+
+      - name: Build plug-in, standalone app and installer
+        shell: cmd
+        run: call build.bat installer
+
+      - name: VST3 host test
+        shell: cmd
+        run: call build.bat hosttest
+
+      - name: Installer test (install, upgrade while loaded, uninstall)
+        shell: powershell
+        run: .\Tests\installer_test.ps1
+
+      - name: UI, interaction and state-robustness test
+        shell: cmd
+        run: call build.bat snapshot
+
+      - name: Checksum
+        shell: pwsh
+        run: |
+          Get-ChildItem dist\*.exe | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content dist\SHA256SUMS.txt
+          Get-Content dist\SHA256SUMS.txt
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: GKEQ-${{ steps.version.outputs.version }}-installer
+          path: |
+            dist/*.exe
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Upload VST3 plug-in
+        uses: actions/upload-artifact@v4
+        with:
+          name: GKEQ-${{ steps.version.outputs.version }}-vst3
+          path: build/ModernEQ_artefacts/Release/VST3/
+          if-no-files-found: error
+
+      - name: Upload UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-screenshots
+          path: build/*.png
+          if-no-files-found: ignore
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+  release:
+    name: Publish GitHub release
+    needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out (changelog)
+        uses: actions/checkout@v4
+
+      - name: Download installer
+        uses: actions/download-artifact@v4
+        with:
+          name: GKEQ-${{ needs.build-and-test.outputs.version }}-installer
+          path: release
+
+      - name: Release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ needs.build-and-test.outputs.version }}
+        run: |
+          awk -v v="$VERSION" '
+            $0 ~ "^## " v "( |$)" { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          {
+            echo
+            echo "**Install:** download the setup, run it (administrator prompt), then rescan plug-ins in your DAW."
+            echo
+            echo "**SHA-256**"
+            echo '```'
+            cat release/SHA256SUMS.txt
+            echo '```'
+          } >> notes.md
+          cat notes.md
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build-and-test.outputs.version }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release/*.exe release/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "GKEQ $VERSION" \
+            --notes-file notes.md \
+            --verify-tag
