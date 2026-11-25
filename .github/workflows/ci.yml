@@ -29,12 +29,12 @@ jobs:
 
     steps:
       - name: Check out (with JUCE and PFFFT submodules)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -85,7 +85,7 @@ jobs:
           Get-Content dist\SHA256SUMS.txt
 
       - name: Upload installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: GKEQ-${{ steps.version.outputs.version }}-installer
           path: |
@@ -94,7 +94,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload VST3 plug-in
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: GKEQ-${{ steps.version.outputs.version }}-vst3
           path: build/ModernEQ_artefacts/Release/VST3/
@@ -102,7 +102,7 @@ jobs:
 
       - name: Upload UI screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ui-screenshots
           path: build/*.png
@@ -121,10 +121,10 @@ jobs:
 
     steps:
       - name: Check out (changelog)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download installer
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: GKEQ-${{ needs.build-and-test.outputs.version }}-installer
           path: release
