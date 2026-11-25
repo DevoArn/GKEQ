@@ -1,3 +1,7 @@
+// GKEQ - 24-band dynamic EQ plug-in
+// Copyright (C) 2026 Roman Gutekunst (GK)
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Renders the real editor (in-process) to PNG files for visual inspection.
 #include "PluginProcessor.h"
 #include "PluginEditor.h"

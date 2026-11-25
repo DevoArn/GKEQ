@@ -1,3 +1,7 @@
+# GKEQ - 24-band dynamic EQ plug-in
+# Copyright (C) 2026 Roman Gutekunst (GK)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 """Packs the built plug-in into the installer payload (payload.zip).
 
 usage: python make_payload.py <build dir> <output zip> <repo root>

@@ -1,6 +1,11 @@
 @echo off
+rem GKEQ - Copyright (C) 2026 Roman Gutekunst (GK)
+rem SPDX-License-Identifier: GPL-3.0-or-later
 rem ---------------------------------------------------------------------------
-rem  GKEQ build script (VS 2019 Build Tools + bundled CMake/Ninja)
+rem  GKEQ build script
+rem  Needs Visual Studio 2019 or 2022 (any edition, or the Build Tools) with the
+rem  "Desktop development with C++" workload; uses its bundled CMake + Ninja.
+rem  Python 3 is needed for "build.bat installer" only.
 rem
 rem    build.bat            Release build of the VST3 + Standalone
 rem    build.bat installer  Release build + Windows installer -> dist\
@@ -11,7 +16,16 @@ rem    build.bat debug      Debug build of the plugin
 rem ---------------------------------------------------------------------------
 setlocal
 
-set "VSROOT=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools"
+rem Locate Visual Studio (newest install with the C++ x64 tools)
+set "VSROOT="
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+if exist "%VSWHERE%" (
+    for /f "usebackq delims=" %%i in (`"%VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set "VSROOT=%%i"
+)
+if not defined VSROOT (
+    echo Visual Studio 2019/2022 with the C++ workload was not found.
+    exit /b 1
+)
 set "CMAKEDIR=%VSROOT%\Common7\IDE\CommonExtensions\Microsoft\CMake"
 set "PATH=%CMAKEDIR%\CMake\bin;%CMAKEDIR%\Ninja;%PATH%"
 

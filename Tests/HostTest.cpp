@@ -1,3 +1,7 @@
+// GKEQ - 24-band dynamic EQ plug-in
+// Copyright (C) 2026 Roman Gutekunst (GK)
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Loads the built VST3 like a DAW would, exercises it and renders the editor to PNG.
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/juce_audio_utils.h>

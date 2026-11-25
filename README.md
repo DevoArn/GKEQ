@@ -13,8 +13,9 @@ commercial product.
 
 ## Install
 
-1. Download / build **`GKEQ 1.0.0 Setup.exe`** and run it (accept the Windows
-   admin prompt). Choose the components (VST3 plug-in, standalone app, Start
+1. Download **`GKEQ 1.0.0 Setup.exe`** from the
+   [Releases](https://github.com/DevoArn/GKEQ/releases) page (or build it, see below)
+   and run it (accept the Windows admin prompt). Choose the components (VST3 plug-in, standalone app, Start
    Menu shortcuts) and press *Install*.
 2. Rescan plug-ins in your DAW. Most hosts scan the standard VST3 folder
    automatically; some need it enabled in their plug-in settings.
@@ -38,12 +39,14 @@ the *Analyzer* menu).
 
 ## Build
 
-Clone with the dependencies: `git clone --recursive <repo url>` (or run
+Clone with the dependencies: `git clone --recursive https://github.com/DevoArn/GKEQ.git` (or run
 `git submodule update --init --depth 1`; `build.bat` also does this
 automatically on a fresh clone).
 
-Requirements (already on this machine): Visual Studio 2019 Build Tools
-(MSVC 14.29, Windows 10 SDK) with its bundled CMake 3.20 and Ninja.
+Requirements: Windows 10/11 x64 and Visual Studio 2019 or 2022 (any edition,
+or the Build Tools) with the *Desktop development with C++* workload;
+`build.bat` finds it automatically and uses its bundled CMake and Ninja.
+Python 3 is needed for `build.bat installer` only.
 
 ```
 build.bat            Release VST3 + Standalone        -> build\ModernEQ_artefacts\Release\
@@ -59,8 +62,9 @@ DLL is loaded, uninstall): `powershell -ExecutionPolicy Bypass -File Tests\insta
 after `build.bat installer`. The installer source is in `Installer\` (a JUCE app
 that embeds the build as a zip payload made by `Tools\make_payload.py`).
 
-Dependencies live in `external\`: JUCE 7.0.12 (its `cmake_minimum_required`
-was lowered from 3.22 to 3.20 to work with the CMake shipped with VS 2019) and
+Dependencies live in `external\` as git submodules: JUCE 7.0.12 (`build.bat`
+lowers its `cmake_minimum_required` from 3.22 to 3.20 so the CMake shipped
+with VS 2019 works too) and
 PFFFT (SIMD FFT used for linear-phase convolution and the analyser).
 
 ---
@@ -167,10 +171,16 @@ menus, all parameters automatable (369 parameters).
   Nyquist (use Natural Phase there).
 - The plug-in has been verified with automated tests and a JUCE test host.
 
+## Contributing
+
+Bug reports and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md)
+and the [changelog](CHANGELOG.md).
+
 ## Licence
 
 GKEQ is free software: you can redistribute it and/or modify it under the
-terms of the **GNU General Public License version 3** (see [LICENSE](LICENSE)).
+terms of the **GNU General Public License version 3 or later** (see [LICENSE](LICENSE)).
+Copyright (C) 2026 Roman Gutekunst (GK).
 It is distributed WITHOUT ANY WARRANTY.
 
 Third-party components:

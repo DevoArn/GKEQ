@@ -1,3 +1,7 @@
+# GKEQ - 24-band dynamic EQ plug-in
+# Copyright (C) 2026 Roman Gutekunst (GK)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 cmake_minimum_required(VERSION 3.20)
 
 project(ModernEQ VERSION 1.0.0 LANGUAGES C CXX)

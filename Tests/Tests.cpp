@@ -1,3 +1,7 @@
+// GKEQ - 24-band dynamic EQ plug-in
+// Copyright (C) 2026 Roman Gutekunst (GK)
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Numerical verification of the GKEQ DSP core.
 #include "dsp/FilterDesign.h"
 #include "dsp/IIREngine.h"

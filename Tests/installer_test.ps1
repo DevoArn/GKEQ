@@ -1,3 +1,7 @@
+# GKEQ - 24-band dynamic EQ plug-in
+# Copyright (C) 2026 Roman Gutekunst (GK)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # End-to-end test of the installer (non-elevated test build, temporary folders).
 param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = 'Stop'
