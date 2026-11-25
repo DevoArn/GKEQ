@@ -52,6 +52,37 @@ void ModernEQProcessor::initUIDefaults()
     setDefault ("width", 1040);
     setDefault ("height", 620);
     setDefault ("gpu", true);
+
+    // UI settings come from project files and may be malformed or hostile:
+    // force every numeric value into its valid range (an absurd analyser range
+    // would otherwise make the editor draw millions of grid labels).
+    // Values restored from a project arrive as strings (XML attributes).
+    auto number = [this] (const juce::Identifier& id, double def)
+    {
+        const auto v = uiState.getProperty (id);
+        if (v.isVoid()) return def;
+        const double d = v.isString() ? v.toString().getDoubleValue() : (double) v;
+        return std::isfinite (d) ? d : def;
+    };
+    auto clampInt = [this, number] (const juce::Identifier& id, int lo, int hi, int def)
+    {
+        uiState.setProperty (id, (int) std::lround (juce::jlimit ((double) lo, (double) hi, number (id, def))), nullptr);
+    };
+    auto clampDouble = [this, number] (const juce::Identifier& id, double lo, double hi, double def)
+    {
+        uiState.setProperty (id, juce::jlimit (lo, hi, number (id, def)), nullptr);
+    };
+    {
+        const int r = (int) uiState.getProperty ("anaRange", 90);
+        uiState.setProperty ("anaRange", r <= 75 ? 60 : (r <= 105 ? 90 : 120), nullptr);
+    }
+    clampInt ("anaRes", 0, 3, 2);
+    clampInt ("anaSpeed", 0, 4, 2);
+    clampDouble ("anaTilt", 0.0, 6.0, 4.5);
+    clampInt ("displayRange", 3, 30, 12);
+    clampInt ("instance", 0, 1000000, 0);
+    clampInt ("width", 880, 2560, 1040);
+    clampInt ("height", 500, 1600, 620);
 }
 
 juce::String ModernEQProcessor::getInstanceName() const

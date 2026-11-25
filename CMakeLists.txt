@@ -179,5 +179,11 @@ if(MEQ_BUILD_INSTALLER)
 
     if(MSVC)
         target_link_options(ModernEQSetup PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
+        # Load imported DLLs from System32 only, never from the folder the
+        # installer was started from (DLL planting protection, 0x800 =
+        # LOAD_LIBRARY_SEARCH_SYSTEM32).
+        foreach(setup_target ModernEQSetup ModernEQSetupTest)
+            target_link_options(${setup_target} PRIVATE "/DEPENDENTLOADFLAG:0x800")
+        endforeach()
     endif()
 endif()

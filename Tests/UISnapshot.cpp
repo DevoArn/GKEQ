@@ -138,6 +138,76 @@ int main()
             std::printf ("   %-10s %8.1f Hz  %+5.2f dB  Q %.2f\n", filterTypeNames()[(int) f.type].toRawUTF8(), f.freq, f.gain, f.q);
     }
 
+    {   // Robustness: hostile and corrupt project state must not hang or crash the plug-in
+        ModernEQProcessor p;
+        p.setPlayConfigDetails (4, 2, 48000.0, 512);
+        p.prepareToPlay (48000.0, 512);
+        // Legitimate settings must survive a save / reload unchanged.
+        p.uiState.setProperty ("anaRange", 60, nullptr);
+        p.uiState.setProperty ("anaTilt", 3.0, nullptr);
+        p.uiState.setProperty ("width", 1320, nullptr);
+        p.uiState.setProperty ("displayRange", 24, nullptr);
+        {
+            juce::MemoryBlock saved;
+            p.getStateInformation (saved);
+            p.uiState.setProperty ("anaRange", 90, nullptr);
+            p.setStateInformation (saved.getData(), (int) saved.getSize());
+            const auto& u = p.uiState;
+            const bool kept = (int) u["anaRange"] == 60 && std::abs ((double) u["anaTilt"] - 3.0) < 1e-9
+                           && (int) u["width"] == 1320 && (int) u["displayRange"] == 24;
+            std::printf ("normal UI settings survive save/reload: %s\n", kept ? "yes" : "NO");
+        }
+
+        juce::MemoryBlock state;
+        p.getStateInformation (state);
+        auto xml = juce::AudioProcessor::getXmlFromBinary (state.getData(), (int) state.getSize());
+        if (auto* ui = xml != nullptr ? xml->getChildByName ("UI") : nullptr)
+        {
+            ui->setAttribute ("anaRange", 2000000000);
+            ui->setAttribute ("anaTilt", "nan");
+            ui->setAttribute ("width", -5);
+            ui->setAttribute ("displayRange", 1.0e30);
+            ui->setAttribute ("anaRes", 99);
+        }
+        juce::MemoryBlock evil;
+        juce::AudioProcessor::copyXmlToBinary (*xml, evil);
+        p.setStateInformation (evil.getData(), (int) evil.getSize());
+        const auto& u = p.uiState;
+        const bool clamped = (int) u["anaRange"] == 120 && (double) u["anaTilt"] >= 0.0 && (double) u["anaTilt"] <= 6.0
+                          && (int) u["width"] == 880 && (int) u["displayRange"] == 30 && (int) u["anaRes"] == 3;
+        std::printf ("hostile UI state clamped: %s (range %d, tilt %.1f, width %d, displayRange %d, anaRes %d)\n",
+                     clamped ? "yes" : "NO", (int) u["anaRange"], (double) u["anaTilt"], (int) u["width"],
+                     (int) u["displayRange"], (int) u["anaRes"]);
+        {
+            std::unique_ptr<juce::AudioProcessorEditor> e (p.createEditor());
+            e->setSize (1040, 620);
+            juce::Image img (juce::Image::ARGB, 1040, 620, true);
+            juce::Graphics g (img);
+            const double t0 = juce::Time::getMillisecondCounterHiRes();
+            e->paintEntireComponent (g, true);
+            std::printf ("editor paint with the hostile state: %.1f ms\n", juce::Time::getMillisecondCounterHiRes() - t0);
+        }
+
+        juce::Random rng (99);
+        juce::AudioBuffer<float> buf (4, 512);
+        juce::MidiBuffer midi;
+        for (int i = 0; i < 500; ++i)
+        {
+            juce::MemoryBlock junk ((size_t) (9 + rng.nextInt (4000)));
+            for (size_t k = 0; k < junk.getSize(); ++k) junk[k] = (char) rng.nextInt (256);
+            if (i % 2 == 0)   // valid JUCE binary-XML header, garbage body
+            {
+                const juce::uint32 magic = 0x21324356, len = (juce::uint32) junk.getSize() - 9;
+                std::memcpy (junk.getData(), &magic, 4);
+                std::memcpy (static_cast<char*> (junk.getData()) + 4, &len, 4);
+            }
+            p.setStateInformation (junk.getData(), (int) junk.getSize());
+            buf.clear();
+            p.processBlock (buf, midi);
+        }
+        std::printf ("survived 500 random / corrupt state blobs while processing\n");
+    }
+
     ModernEQProcessor proc;
     proc.uiState.setProperty ("gpu", false, nullptr);
     proc.setPlayConfigDetails (4, 2, 48000.0, 512);

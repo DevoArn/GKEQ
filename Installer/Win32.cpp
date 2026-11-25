@@ -16,6 +16,17 @@
 namespace setup::win32
 {
 
+// Security (DLL planting, CWE-427): the installer runs elevated and is usually
+// started from the Downloads folder. Restrict all run-time DLL loading to
+// System32 as early as possible (static construction, before WinMain). The
+// static imports are covered by the /DEPENDENTLOADFLAG linker option.
+[[maybe_unused]] static const bool dllSearchRestricted = []
+{
+    SetDefaultDllDirectories (LOAD_LIBRARY_SEARCH_SYSTEM32);
+    SetDllDirectoryW (L"");
+    return true;
+}();
+
 static std::wstring lower (std::wstring s)
 {
     std::transform (s.begin(), s.end(), s.begin(), [] (wchar_t c) { return (wchar_t) std::towlower (c); });

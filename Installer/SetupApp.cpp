@@ -194,6 +194,14 @@ static Result install (const Options& opt, const Log& log)
             continue;
         }
 
+        // Defence in depth ("zip slip"): never write outside the target folders.
+        if (! (target.isAChildOf (opt.vst3Dir) || target.isAChildOf (opt.appDir)))
+        {
+            r.ok = false;
+            r.message = "The installer payload contains an invalid path: " + name;
+            return r;
+        }
+
         std::unique_ptr<InputStream> in (zip.createStreamForEntry (i));
         if (in == nullptr || ! writeFile (target, *in, r, log))
         {
@@ -264,8 +272,14 @@ static void scheduleSelfDelete (const File& exe, const File& dir)
     // cmd waits until this process has exited, then removes the uninstaller
     // and the (then empty) program folder. rmdir without /s never deletes
     // anything that is not ours.
-    String cmd = "cmd.exe /c cd /d \"" + File::getSpecialLocation (File::tempDirectory).getFullPathName()
-               + "\" & ping 127.0.0.1 -n 3 > nul & del /f /q \"" + exe.getFullPathName() + "\"";
+    // Security: this runs elevated, so every program is started by its full
+    // System32 path and the working directory is System32 - never a
+    // user-writable folder such as %TEMP%, where a planted ping.exe/.bat
+    // would otherwise run with administrator rights.
+    const File sys32 = File::getSpecialLocation (File::windowsSystemDirectory);
+    String cmd = "\"" + sys32.getChildFile ("cmd.exe").getFullPathName() + "\" /c cd /d \"" + sys32.getFullPathName()
+               + "\" & \"" + sys32.getChildFile ("PING.EXE").getFullPathName() + "\" 127.0.0.1 -n 3 > nul & del /f /q \""
+               + exe.getFullPathName() + "\"";
     if (dir.getFileName().equalsIgnoreCase (kProduct))
         cmd << " & rmdir \"" << dir.getFullPathName() << "\"";
     ChildProcess p;
