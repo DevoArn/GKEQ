@@ -1,4 +1,5 @@
 # GKEQ
+<img width="1638" height="960" alt="image" src="https://github.com/user-attachments/assets/3cef8b6e-f2c3-42e6-b444-d9e603075aaa" />
 
 A free, open-source 24-band parametric / dynamic EQ plug-in for Windows
 (VST3, x64), by GK: analog-matched zero-latency filters, Natural and Linear
