@@ -1,43 +1,40 @@
 # GKEQ
 
-A 24-band parametric / dynamic EQ plug-in (VST3, Windows x64) for Ableton Live,
-modelled on the feature set of high-end "surgical" EQs: analog-matched
-zero-latency filters, Natural and Linear Phase modes, per-band dynamics with
-external side-chain, mid/side placement, spectrum analyser with grab and
-collision detection, EQ Match and EQ Sketch.
+A free, open-source 24-band parametric / dynamic EQ plug-in for Windows
+(VST3, x64), by GK: analog-matched zero-latency filters, Natural and Linear
+Phase modes, per-band dynamics with external side-chain, mid/side placement,
+spectrum analyser with grab and collision detection, EQ Match and EQ Sketch.
+Works in any VST3 host (DAW) on Windows; a standalone app is included.
 
 It has its own name and visual design and is not affiliated with any
 commercial product.
 
 ---
 
-## Install into Ableton Live
+## Install
 
-1. Run **`dist\GKEQ 1.0.0 Setup.exe`** and accept the Windows admin prompt.
-   Choose the components (VST3 plug-in, standalone app, Start Menu shortcuts)
-   and press *Install*.
-2. In Live: *Options → Preferences → Plug-Ins*, switch on
-   **Use VST3 Plug-in System Folders**, press **Rescan**.
-3. The plug-in shows up under *Plug-Ins → Modern Audio → GKEQ*.
+1. Download / build **`GKEQ 1.0.0 Setup.exe`** and run it (accept the Windows
+   admin prompt). Choose the components (VST3 plug-in, standalone app, Start
+   Menu shortcuts) and press *Install*.
+2. Rescan plug-ins in your DAW. Most hosts scan the standard VST3 folder
+   automatically; some need it enabled in their plug-in settings.
+3. GKEQ appears with the maker name **GK**.
 
 | Installed to | |
 |---|---|
 | `C:\Program Files\Common Files\VST3\GKEQ.vst3` | VST3 plug-in (folder selectable) |
-| `C:\Program Files\GKEQ\` | Standalone app, uninstaller, third-party notices |
+| `C:\Program Files\GKEQ\` | Standalone app, uninstaller, licence and notices |
 | Start Menu → *GKEQ* | Shortcuts to the app and the uninstaller |
 | `Documents\GKEQ\Presets` | Your presets (created on first save, kept on uninstall unless you tick the option) |
 
 Uninstall from *Settings → Apps → Installed apps → GKEQ* or the Start Menu.
-The installer can run while Live is open: a plug-in that Live has loaded is moved
-aside and the new version is used after Live restarts. Silent use:
+The installer can run while a DAW is open: a plug-in file the host has loaded
+is moved aside and the new version is used after the host restarts. Silent use:
 `"GKEQ 1.0.0 Setup.exe" /S` and `"Uninstall GKEQ.exe" /S`.
 
-If you had added the project's `build` folder to Live as a custom plug-in
-folder, remove it there, otherwise Live lists GKEQ twice.
-
-Side-chain: in Live's device title bar, open the side-chain section and choose
-the source track; then enable *EXT SC* on a dynamic band (or show the
-side-chain spectrum from the *Analyzer* menu).
+Side-chain: route a side-chain signal to GKEQ's second input in your host,
+then enable *EXT SC* on a dynamic band (or show the side-chain spectrum from
+the *Analyzer* menu).
 
 ## Build
 
@@ -108,7 +105,7 @@ click-free bypass.
 resolution Low…Maximum; speed; tilt 0 – 6 dB/oct; freeze; *Spectrum Grab*
 (hover a peak, drag it to create a band); *Collision Detection* (red areas where
 this track and the side-chain/other instance compete); overlay of **another
-GKEQ instance's** spectrum (all instances in the Live set see each other).
+GKEQ instance's** spectrum (all instances in the same host process see each other).
 
 **EQ Match** – learns the average spectrum of this track and a reference
 (side-chain input or another instance), shows reference / current /
@@ -122,7 +119,7 @@ reproduce it are created on release.
 `Documents\GKEQ\Presets`), resizable window (sizes in *Settings*),
 piano-roll display with note names, GPU (OpenGL) drawing (toggle in
 *Settings*), floating band panel, multi-band selection and editing, context
-menus, all parameters automatable in Live (369 parameters).
+menus, all parameters automatable (369 parameters).
 
 ### Mouse & keyboard
 
@@ -164,15 +161,26 @@ menus, all parameters automatable in Live (369 parameters).
   automatic threshold learning are not implemented.
 - Other instances can be viewed (spectrum overlay, collisions, EQ Match source)
   but not edited remotely; there is no surround/Atmos support and no built-in
-  MIDI learn (use Live's MIDI mapping of plug-in parameters).
+  MIDI learn (use your host's MIDI mapping of plug-in parameters).
 - In Zero Latency mode at 44.1/48 kHz, bands placed above ~17 kHz with high Q
   can deviate a few dB from the analog curve in the last half octave below
   Nyquist (use Natural Phase there).
-- The plug-in has been verified with automated tests and a JUCE test host;
-  it has not been tested inside Ableton Live by the author.
+- The plug-in has been verified with automated tests and a JUCE test host.
 
-## License notes
+## Licence
 
-JUCE is used under its GPLv3 / commercial licence and PFFFT under its BSD-style
-licence. Personal use is fine; distributing the binary requires either
-releasing the source under GPLv3 or a JUCE licence.
+GKEQ is free software: you can redistribute it and/or modify it under the
+terms of the **GNU General Public License version 3** (see [LICENSE](LICENSE)).
+It is distributed WITHOUT ANY WARRANTY.
+
+Third-party components:
+
+- [JUCE](https://juce.com) 7 – GPLv3.
+- VST3 SDK (included with JUCE) – Steinberg Media Technologies GmbH, used under
+  GPLv3. VST is a trademark of Steinberg Media Technologies GmbH, registered in
+  Europe and other countries.
+- [PFFFT](https://github.com/marton78/pffft) – BSD-style licence
+  (`external/pffft/LICENSE.txt`).
+
+The installer ships `LICENSE.txt` and `Third-Party Notices.txt` (with a link to
+this source code) next to the standalone app.

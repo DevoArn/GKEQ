@@ -49,13 +49,13 @@ set(MEQ_UI_SOURCES
 
 if(MEQ_BUILD_PLUGIN)
 juce_add_plugin(ModernEQ
-    COMPANY_NAME "Modern Audio"
+    COMPANY_NAME "GK"
     COMPANY_WEBSITE ""
     PLUGIN_MANUFACTURER_CODE MdAu
     PLUGIN_CODE MdEq
     FORMATS VST3 Standalone
     PRODUCT_NAME "GKEQ"
-    BUNDLE_ID "com.modernaudio.gkeq"
+    BUNDLE_ID "com.gk.gkeq"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE
@@ -160,7 +160,7 @@ if(MEQ_BUILD_INSTALLER)
     foreach(setup_target ModernEQSetup ModernEQSetupTest)
         juce_add_gui_app(${setup_target}
             PRODUCT_NAME "GKEQ Setup"
-            COMPANY_NAME "Modern Audio"
+            COMPANY_NAME "GK"
             VERSION ${PROJECT_VERSION}
             ICON_BIG Resources/icon.png)
         target_sources(${setup_target} PRIVATE Installer/SetupApp.cpp Installer/Win32.cpp)

@@ -45,7 +45,7 @@ Check (Test-Path "$app\Third-Party Notices.txt") "third-party notices installed"
 Check (Test-Path "$menu\GKEQ.lnk") "Start Menu shortcut: GKEQ"
 Check (Test-Path "$menu\Uninstall GKEQ.lnk") "Start Menu shortcut: Uninstall"
 
-Write-Host "[2] Reinstall while the plug-in is loaded by another process (like a running Ableton Live)"
+Write-Host "[2] Reinstall while the plug-in is loaded by another process (like a running DAW)"
 $holderScript = Join-Path $base 'holder.ps1'
 Set-Content -LiteralPath $holderScript -Encoding UTF8 -Value @'
 param([string]$Path)

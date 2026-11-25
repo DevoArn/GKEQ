@@ -15,14 +15,24 @@ for path in (bundle, app):
     if not os.path.exists(path):
         sys.exit("missing build output: " + path)
 
-notices = """GKEQ - third-party notices
-================================
+notices = """GKEQ - licence and third-party notices
+=====================================
 
-GKEQ is built with JUCE (https://juce.com), used under the terms of the
-GNU General Public License v3 or a commercial JUCE licence.
+GKEQ is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License version 3 (see LICENSE.txt).
+It comes WITHOUT ANY WARRANTY. Complete source code:
+https://github.com/DevoArn/GKEQ
 
-It contains PFFFT (https://github.com/marton78/pffft), distributed under the
-following licence:
+GKEQ is built with:
+
+* JUCE 7 (https://juce.com) - used under the GNU General Public License v3.
+
+* VST3 SDK by Steinberg Media Technologies GmbH - used under the GNU General
+  Public License v3. VST is a trademark of Steinberg Media Technologies GmbH,
+  registered in Europe and other countries.
+
+* PFFFT (https://github.com/marton78/pffft), distributed under the following
+  licence:
 
 """
 with open(os.path.join(root, "external", "pffft", "LICENSE.txt"), encoding="utf-8", errors="replace") as f:
@@ -41,6 +51,8 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
             count += 1
     z.write(app, "app/GKEQ.exe")
     z.writestr("app/Third-Party Notices.txt", notices.replace("\n", "\r\n"))
-    count += 2
+    with open(os.path.join(root, "LICENSE"), encoding="utf-8") as f:
+        z.writestr("app/LICENSE.txt", f.read().replace("\r\n", "\n").replace("\n", "\r\n"))
+    count += 3
 
 print("payload: %d files, %.1f MB -> %s" % (count, os.path.getsize(out) / 1e6, out))

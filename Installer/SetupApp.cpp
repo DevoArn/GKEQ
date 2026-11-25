@@ -17,7 +17,8 @@ namespace setup
 using namespace juce;
 
 static const String kProduct ("GKEQ");
-static const String kPublisher ("Modern Audio");
+static const String kPublisher ("GK");
+static const String kSourceUrl ("https://github.com/DevoArn/GKEQ");
 static const String kVersion (MEQ_VERSION);
 static const String kRegKey ("HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GKEQ");
 static const String kLegacyRegKey ("HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\ModernEQ");
@@ -71,7 +72,7 @@ using Log = std::function<void (const String&)>;
 static String stamp() { return Time::getCurrentTime().formatted ("%Y%m%d%H%M%S"); }
 
 /** Deletes a file. If Windows refuses because it is loaded (e.g. the plug-in
-    inside a running Ableton Live), the file is renamed out of the way and
+    inside a running DAW), the file is renamed out of the way and
     removed at the next reboot; the host keeps using it until it restarts. */
 static bool removeFile (const File& f, Result& r, const Log& log)
 {
@@ -153,7 +154,7 @@ static Result install (const Options& opt, const Log& log)
             log ("Removed previous version: " + oldBundle.getFullPathName());
         }
         const File oldApp = opt.appDir.getSiblingFile (kLegacyProduct);
-        for (auto name : { kLegacyProduct + ".exe", "Uninstall " + kLegacyProduct + ".exe", String ("Third-Party Notices.txt") })
+        for (auto name : { kLegacyProduct + ".exe", "Uninstall " + kLegacyProduct + ".exe", String ("Third-Party Notices.txt"), String ("LICENSE.txt") })
             removeFile (oldApp.getChildFile (name), r, log);
         removeLeftovers (oldApp, false);
         oldApp.deleteFile();   // only if empty
@@ -305,7 +306,7 @@ static Result uninstall (const Options& opt, bool removeUserData, const Log& log
     }
 
     // Program folder: only our own files
-    for (auto name : { kProduct + ".exe", String ("Third-Party Notices.txt") })
+    for (auto name : { kProduct + ".exe", String ("Third-Party Notices.txt"), String ("LICENSE.txt") })
     {
         const File f = appDir.getChildFile (name);
         if (f.existsAsFile() && removeFile (f, r, log))
@@ -442,7 +443,7 @@ public:
         for (auto* l : { &body, &warning, &status, &vst3Path, &appPath })
             l->setMinimumHorizontalScale (1.0f);
 
-        vst3Toggle.setButtonText ("VST3 plug-in  (Ableton Live and other hosts)");
+        vst3Toggle.setButtonText ("VST3 plug-in  (for your DAW / plug-in host)");
         appToggle.setButtonText ("Standalone application");
         shortcutToggle.setButtonText ("Start Menu shortcuts");
         removeData.setButtonText ("Also delete my presets and settings (Documents\\GKEQ)");
@@ -606,11 +607,18 @@ private:
         page = Page::Start;
         for (auto* c : getChildren()) c->setVisible (false);
 
-        const bool liveRunning = win32::isProcessRunning (L"ableton live");
+        String runningHost;
+        const std::pair<const wchar_t*, const char*> hosts[] = {
+            { L"ableton live", "Ableton Live" }, { L"fl64", "FL Studio" }, { L"reaper", "REAPER" },
+            { L"cubase", "Cubase" }, { L"nuendo", "Nuendo" }, { L"studio one", "Studio One" },
+            { L"bitwig", "Bitwig Studio" }, { L"reason", "Reason" }, { L"cakewalk", "Cakewalk" } };
+        for (auto& h : hosts)
+            if (runningHost.isEmpty() && win32::isProcessRunning (h.first))
+                runningHost = h.second;
         if (uninstalling)
         {
             body.setText ("This removes the GKEQ VST3 plug-in, the standalone application, the Start Menu "
-                          "shortcuts and the entry in Installed apps.\n\nLive sets that use GKEQ keep their "
+                          "shortcuts and the entry in Installed apps.\n\nProjects that use GKEQ keep their "
                           "settings, but the plug-in will be missing until it is installed again.",
                           dontSendNotification);
             removeData.setVisible (true);
@@ -619,13 +627,13 @@ private:
         else
         {
             body.setText ("Choose what to install. The VST3 plug-in goes into the standard Windows VST3 folder "
-                          "that Ableton Live scans.", dontSendNotification);
+                          "that plug-in hosts scan.", dontSendNotification);
             for (auto* c : std::initializer_list<Component*> { &vst3Toggle, &appToggle, &shortcutToggle, &vst3Path, &appPath, &changeVst3 })
                 c->setVisible (true);
             primary.setButtonText ("Install");
         }
-        warning.setText (liveRunning ? String ("Ableton Live is running. You can continue - the new version is loaded "
-                                               "the next time Live starts - or close Live first.")
+        warning.setText (runningHost.isNotEmpty() ? runningHost + " is running. You can continue - the new version is loaded "
+                                                             "the next time it starts - or close it first."
                                      : String(), dontSendNotification);
         for (auto* c : std::initializer_list<Component*> { &body, &warning, &primary, &secondary })
             c->setVisible (true);
@@ -691,10 +699,10 @@ private:
             text = r.message;
         else if (! uninstalling)
         {
-            text = "In Ableton Live: Options > Preferences > Plug-Ins - switch on \"Use VST3 Plug-in System "
-                   "Folders\" and press Rescan. GKEQ appears under Plug-Ins > Modern Audio.";
+            text = "Rescan plug-ins in your DAW (make sure it scans the standard VST3 folder). "
+                   "GKEQ appears under the maker GK.\nGKEQ is free software (GPLv3); source: " + kSourceUrl;
             if (r.needsHostRestart)
-                text << "\nA running host still uses the previous version: restart Ableton Live to load the new one.";
+                text << "\nA running host still uses the previous version: restart it to load the new one.";
         }
         else if (r.needsHostRestart)
             text = "Some files were in use and will be removed after you restart Windows.";

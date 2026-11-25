@@ -92,7 +92,7 @@ cmake -S "%SRC%." -B "%SRC%build" -G Ninja -DCMAKE_BUILD_TYPE=Release || exit /b
 cmake --build "%SRC%build" --target ModernEQ_VST3 ModernEQ_Standalone || exit /b 1
 exit /b 0
 
-rem If a host (e.g. Ableton Live) has the built plug-in or the standalone app
+rem If a host (a DAW) has the built plug-in or the standalone app
 rem loaded, Windows refuses to overwrite it. Such a file can still be renamed:
 rem move it aside so the linker can write the new version.
 :unlock
@@ -100,5 +100,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "foreach ($f in @('%OUT%\VST3\GKEQ.vst3\Contents\x86_64-win\GKEQ.vst3', '%OUT%\Standalone\GKEQ.exe')) {" ^
   "  if (Test-Path -LiteralPath $f) { try { [IO.File]::Open($f, 'Open', 'ReadWrite', 'None').Close() } catch {" ^
   "    $n = (Split-Path $f -Leaf) + '.old-' + (Get-Date -Format yyyyMMddHHmmss); Rename-Item -LiteralPath $f -NewName $n;" ^
-  "    Write-Host ('In use (e.g. by Ableton Live), moved aside: ' + $n + ' - restart the host to load the new build') } } }"
+  "    Write-Host ('In use (e.g. by a DAW), moved aside: ' + $n + ' - restart the host to load the new build') } } }"
 exit /b 0
