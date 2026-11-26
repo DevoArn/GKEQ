@@ -169,6 +169,26 @@ int main()
             std::printf ("normal UI settings survive save/reload: %s\n", kept ? "yes" : "NO");
             expect (kept, "UI settings round trip");
         }
+        {   // The editor must open at the stored size (setResizeLimits must not overwrite it).
+            p.uiState.setProperty ("width", 1320, nullptr);
+            p.uiState.setProperty ("height", 760, nullptr);
+            std::unique_ptr<juce::AudioProcessorEditor> e (p.createEditor());
+            std::printf ("editor opens at %d x %d (stored 1320 x 760)\n", e->getWidth(), e->getHeight());
+            expect (e->getWidth() == 1320 && e->getHeight() == 760, "editor restores its stored size");
+        }
+        {   // Value texts are rounded (juce::String (x, 0) would print every decimal).
+            auto text = [&p] (const juce::String& name, float v) -> juce::String
+            {
+                for (auto* prm : p.getParameters())
+                    if (prm->getName (100) == name)
+                        if (auto* r = dynamic_cast<juce::RangedAudioParameter*> (prm))
+                            return r->getText (r->convertTo0to1 (v), 64);
+                return "(missing)";
+            };
+            const auto f = text ("Band 1 Frequency", 150.347f), a = text ("Band 1 Attack", 12.34f);
+            std::printf ("value texts: '%s', '%s'\n", f.toRawUTF8(), a.toRawUTF8());
+            expect (f == "150 Hz" && a == "12 ms", "parameter value texts are rounded");
+        }
 
         juce::MemoryBlock state;
         p.getStateInformation (state);

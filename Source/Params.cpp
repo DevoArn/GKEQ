@@ -35,11 +35,22 @@ juce::String formatFrequency (double hz, bool withUnit)
     if (hz >= 1000.0)
     {
         const double k = hz / 1000.0;
-        auto s = juce::String (k, k >= 10.0 ? 1 : 2);
+        auto s = formatNumber (k, k >= 10.0 ? 1 : 2);
         return withUnit ? s + " kHz" : s + "k";
     }
-    auto s = juce::String (hz, hz >= 100.0 ? 0 : 1);
+    auto s = formatNumber (hz, hz >= 100.0 ? 0 : 1);
     return withUnit ? s + " Hz" : s;
+}
+
+juce::String formatNumber (double v, int decimals)
+{
+    if (! std::isfinite (v)) v = 0.0;
+    if (decimals <= 0)
+    {
+        const auto r = (long long) std::llround (v);
+        return juce::String (r == 0 ? 0LL : r);   // no "-0"
+    }
+    return juce::String (v, decimals);
 }
 
 juce::String formatGain (double db)
@@ -100,7 +111,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
                      .withStringFromValueFunction ([] (float v, int) { return formatQ (v); })
                      .withValueFromStringFunction ([] (const String& s) { return s.getFloatValue(); });
     auto msAttr = AudioParameterFloatAttributes()
-                      .withStringFromValueFunction ([] (float v, int) { return String (v, v < 10.0f ? 1 : 0) + " ms"; })
+                      .withStringFromValueFunction ([] (float v, int) { return formatNumber (v, v < 10.0f ? 1 : 0) + " ms"; })
                       .withValueFromStringFunction ([] (const String& s) { return s.getFloatValue(); });
 
     for (int b = 0; b < kNumBands; ++b)
@@ -138,13 +149,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
     }
 
     auto pctAttr = AudioParameterFloatAttributes()
-                       .withStringFromValueFunction ([] (float v, int) { return String (v, 0) + " %"; })
+                       .withStringFromValueFunction ([] (float v, int) { return formatNumber (v, 0) + " %"; })
                        .withValueFromStringFunction ([] (const String& s) { return s.getFloatValue(); });
     auto panAttr = AudioParameterFloatAttributes()
                        .withStringFromValueFunction ([] (float v, int)
                        {
                            if (std::abs (v) < 0.5f) return String ("Center");
-                           return String (std::abs (v), 0) + (v < 0 ? " L" : " R");
+                           return formatNumber (std::abs (v), 0) + (v < 0 ? " L" : " R");
                        });
 
     auto global = std::make_unique<AudioProcessorParameterGroup> ("global", "Global", "|");

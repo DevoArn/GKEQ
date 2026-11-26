@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: the editor now reopens at the window size you last used (it always
+  came back at the minimum size).
+- Fixed: parameter values with whole-number display (frequencies from 100 Hz,
+  times from 10 ms, percentages, pan) showed every decimal after dragging,
+  e.g. "150.347 Hz" instead of "150 Hz".
+
 ## 1.0.0 – 2026-11-25
 
 First public release.

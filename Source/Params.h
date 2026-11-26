@@ -183,6 +183,9 @@ public:
 // ---------------------------------------------------------------------------
 // Formatting helpers shared by the UI and parameter text functions
 // ---------------------------------------------------------------------------
+/** Number with a fixed count of decimals. (juce::String (x, 0) does NOT round:
+    0 decimal places means "as many as needed" in JUCE.) */
+juce::String formatNumber (double v, int decimals);
 juce::String formatFrequency (double hz, bool withUnit = true);
 juce::String formatGain (double db);
 juce::String formatQ (double q);

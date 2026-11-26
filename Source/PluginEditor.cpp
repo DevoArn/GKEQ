@@ -40,10 +40,13 @@ ModernEQEditor::ModernEQEditor (ModernEQProcessor& p)
     addMouseListener (this, true);
     tooltip = std::make_unique<juce::TooltipWindow> (this, 700);
 
+    // Read the stored size first: setResizeLimits() resizes the editor, and
+    // resized() writes the current size back into the UI state.
+    const int w = juce::jlimit (880, 2560, (int) proc.uiState.getProperty ("width", 1040));
+    const int h = juce::jlimit (500, 1600, (int) proc.uiState.getProperty ("height", 620));
     setResizable (true, true);
     setResizeLimits (880, 500, 2560, 1600);
-    setSize (juce::jlimit (880, 2560, (int) proc.uiState.getProperty ("width", 1040)),
-             juce::jlimit (500, 1600, (int) proc.uiState.getProperty ("height", 620)));
+    setSize (w, h);
     setWantsKeyboardFocus (true);
 
     proc.commitUndoPoint();   // establishes the undo baseline
