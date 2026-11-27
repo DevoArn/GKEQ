@@ -1,6 +1,7 @@
 [submodule "external/JUCE"]
 	path = external/JUCE
 	url = https://github.com/juce-framework/JUCE.git
+	ignore = dirty
 [submodule "external/pffft"]
 	path = external/pffft
 	url = https://github.com/marton78/pffft.git

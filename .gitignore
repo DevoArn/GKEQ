@@ -2,11 +2,30 @@
 /build/
 /build-*/
 /dist/
+/out/
 *.old-*
+*.log
+*.tmp
 
-# IDE / OS
+# IDE / tools
 .vs/
 .vscode/
+.idea/
 *.user
+CMakeUserPresets.json
+compile_commands.json
+__pycache__/
+
+# OS
 Thumbs.db
 desktop.ini
+.DS_Store
+*.lnk
+
+# Local leftovers in the repository root (sources live in Source/, the README
+# image is hosted on GitHub, CICD.md is a personal note)
+/*.cpp
+/*.h
+/*.png
+/*.jpg
+/CICD.md
